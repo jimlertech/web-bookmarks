@@ -37,15 +37,21 @@ function Get-UserscriptLatestTag {
     ([string](Invoke-UserscriptTool gh @('api', "repos/$script:GitHubRepository/releases/latest", '--jq', '.tag_name') $Repository -Capture)).Trim()
 }
 
+function ConvertTo-UserscriptText {
+    param([object]$Content)
+    if ($Content -is [byte[]]) { return [Text.Encoding]::UTF8.GetString($Content) }
+    [string]$Content
+}
+
 function Get-UserscriptRaw {
     param([string]$Tag)
     $uri = "https://github.com/$script:GitHubRepository/releases/download/$Tag/$script:BundleName"
-    (Invoke-WebRequest -Uri $uri -TimeoutSec 30).Content
+    ConvertTo-UserscriptText (Invoke-WebRequest -Uri $uri -TimeoutSec 30).Content
 }
 
 function Get-UserscriptLatestRaw {
     $uri = "https://github.com/$script:GitHubRepository/releases/latest/download/$script:BundleName"
-    (Invoke-WebRequest -Uri $uri -TimeoutSec 30).Content
+    ConvertTo-UserscriptText (Invoke-WebRequest -Uri $uri -TimeoutSec 30).Content
 }
 
 function Get-UserscriptVersion {

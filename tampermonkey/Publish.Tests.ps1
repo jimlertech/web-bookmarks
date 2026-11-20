@@ -105,6 +105,11 @@ Describe 'Userscript publication and release records' {
         Test-Path $script:records | Should Be $false
     }
 
+    It 'decodes GitHub Release assets returned as UTF-8 bytes' {
+        $content = "// @version 4.9.43`n"
+        (ConvertTo-UserscriptText ([Text.Encoding]::UTF8.GetBytes($content))) | Should Be $content
+    }
+
     It 'rejects changed content without a higher version' {
         $script:releaseDetails.tagName = 'tampermonkey-v4.9.39'
         $script:latestTag = $script:releaseDetails.tagName
