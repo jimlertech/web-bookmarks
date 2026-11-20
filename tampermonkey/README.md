@@ -90,8 +90,8 @@ for distribution is retained as a migration bridge for existing installs.
    ```
 
 The command requires PowerShell 7.5+, GitHub CLI repository access, the sibling
-`solution-deploy` checkout and access to the release-record folder on
-`\\jimbrownhome1.local\c$`. It checks the committed bundle's metadata, requires
+`solution-deploy` checkout and key-only SSH access to the release-record folder
+on `jimbrownhome1`. It checks the committed bundle's metadata, requires
 a version increase for changed content, creates and verifies a tagged GitHub
 Release before recording the `tampermonkey` component in Solution Directory.
 The hosted app's `web` release record is unchanged.

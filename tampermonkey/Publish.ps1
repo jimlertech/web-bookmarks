@@ -3,7 +3,7 @@
 param(
     [string]$Commit = 'HEAD',
     [switch]$VerifyOnly,
-    [string]$RecordDirectory = '\\jimbrownhome1.local\c$\ProgramData\SolutionDeploy\apps\solution-deploy\data\releases'
+    [string]$RecordDirectory = 'C:\.solution-deploy-ssh\jimbrownhome1.local\C\ProgramData\SolutionDeploy\apps\solution-deploy\data\releases'
 )
 
 $ErrorActionPreference = 'Stop'
