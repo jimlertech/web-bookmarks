@@ -5,7 +5,7 @@
 // prepend the ==UserScript== metadata from src/header.txt as a verbatim banner so
 // Tampermonkey still sees it at the very top of the file.
 //
-// Output: ../webbookmarks-palette.user.js (the file Tampermonkey / the Gist ship).
+// Output: ../webbookmarks-palette.user.js (the file distributed through GitHub Releases).
 // Run with `npm run build` from the tampermonkey/ folder.
 import * as esbuild from 'esbuild';
 import { readFileSync } from 'node:fs';

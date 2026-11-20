@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WebBookmarks Command Palette
 // @namespace    https://web-bookmarks.jimlertech.com
-// @version      4.9.42
+// @version      4.9.43
 // @description  Press Ctrl+Alt+/ on any page to open the WebBookmarks command palette
 // @match        *://*/*
 // @exclude      http://192.168.50.100:3002/*
@@ -18,6 +18,6 @@
 // @connect      web-bookmarks.jimlertech.com
 // @connect      yellow-field-eef5.cloudflareaccess.com
 // @run-at       document-start
-// @updateURL    https://gist.githubusercontent.com/purduepete/7e7bb1d0855d688bf683069e786ac524/raw/webbookmarks-palette.user.js
-// @downloadURL  https://gist.githubusercontent.com/purduepete/7e7bb1d0855d688bf683069e786ac524/raw/webbookmarks-palette.user.js
+// @updateURL    https://github.com/jimlertech/web-bookmarks/releases/latest/download/webbookmarks-palette.user.js
+// @downloadURL  https://github.com/jimlertech/web-bookmarks/releases/latest/download/webbookmarks-palette.user.js
 // ==/UserScript==

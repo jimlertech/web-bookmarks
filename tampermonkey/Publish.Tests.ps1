@@ -13,10 +13,19 @@ function Assert-PublishThrows([scriptblock]$Action, [string]$Message) {
 Describe 'Userscript publication and release records' {
     BeforeEach {
         $script:commitId = 'a' * 40
-        $script:revisionId = 'b' * 40
         $script:headerText = "// ==UserScript==`n// @version      4.9.39`n// ==/UserScript=="
         $script:bundleText = "$script:headerText`nconsole.log('palette');`n"
-        $script:remoteText = $script:bundleText
+        $script:remoteText = $script:bundleText.Replace('4.9.39', '4.9.38')
+        $script:latestText = $script:remoteText
+        $script:releaseDetails = @{
+            tagName = 'tampermonkey-v4.9.38'
+            publishedAt = '2026-10-30T19:20:53Z'
+        }
+        $script:latestTag = $script:releaseDetails.tagName
+        $script:releaseList = @(@{ tagName = $script:releaseDetails.tagName; publishedAt = $script:releaseDetails.publishedAt })
+        $script:createRelease = $false
+        $script:failReleaseCreation = $false
+        $script:skipReleaseUpdate = $false
         $script:records = Join-Path $TestDrive ([guid]::NewGuid().ToString('N'))
         Mock Resolve-CommonReleaseSource { $script:commitId }
         Mock Invoke-UserscriptTool {
@@ -32,61 +41,99 @@ Describe 'Userscript publication and release records' {
                         try { $writer.Write($entry.text) } finally { $writer.Dispose() }
                     }
                 } finally { $zip.Dispose() }
-            } elseif ($Name -eq 'gh') {
-                $script:remoteText = $script:bundleText
+            } elseif ($Name -eq 'gh' -and $Arguments[0] -eq 'release' -and $Arguments[1] -eq 'create') {
+                if ($script:failReleaseCreation) { throw 'Release creation failed' }
+                $script:createRelease = $true
+                if (-not $script:skipReleaseUpdate) {
+                    $script:releaseDetails = @{
+                        tagName = $Arguments[2]
+                        publishedAt = '2026-11-20T16:30:00Z'
+                    }
+                    $script:latestTag = $Arguments[2]
+                    $script:remoteText = $script:bundleText
+                    $script:latestText = $script:bundleText
+                }
             } else { throw "Unexpected tool $Name" }
         }
-
-        Mock Get-UserscriptGist {
-            @{ history = @(@{ version = $script:revisionId; committed_at = '2026-10-30T19:20:53Z' }) }
-        }
+        Mock Get-UserscriptReleases { $script:releaseList }
+        Mock Get-UserscriptReleaseDetails { $script:releaseDetails }
+        Mock Get-UserscriptLatestTag { $script:latestTag }
         Mock Get-UserscriptRaw { $script:remoteText }
+        Mock Get-UserscriptLatestRaw { $script:latestText }
     }
 
-    It 'records an already published revision with its real publication time without uploading' {
-        $result = Invoke-UserscriptRelease $root HEAD -VerifyOnly -GistRevision $script:revisionId -RecordDirectory $script:records
+    It 'records an existing release with its real publication time without uploading' {
+        $script:releaseDetails.tagName = 'tampermonkey-v4.9.39'
+        $script:latestTag = $script:releaseDetails.tagName
+        $script:releaseList = @(@{ tagName = $script:releaseDetails.tagName; publishedAt = $script:releaseDetails.publishedAt })
+        $script:remoteText = $script:bundleText
+        $script:latestText = $script:bundleText
+        $result = Invoke-UserscriptRelease $root HEAD -VerifyOnly -RecordDirectory $script:records
         $result.component | Should Be tampermonkey
         $result.sourceCommit | Should Be $script:commitId
         $result.version | Should Be '4.9.39'
-        $result.gistRevision | Should Be $script:revisionId
+        $result.releaseTag | Should Be 'tampermonkey-v4.9.39'
         ([DateTimeOffset]::Parse($result.completedLocal).ToUnixTimeSeconds()) | Should Be ([DateTimeOffset]::Parse('2026-10-30T19:20:53Z').ToUnixTimeSeconds())
         (Read-DeploymentJson (Join-Path $script:records 'web-bookmarks--tampermonkey.json')).sourceCommit | Should Be $script:commitId
         Assert-MockCalled Invoke-UserscriptTool -Times 0 -Exactly -Scope It -ParameterFilter { $Name -eq 'gh' }
     }
 
     It 'publishes a higher version and verifies it before recording' {
-        $script:remoteText = $script:bundleText.Replace('4.9.39', '4.9.38')
         (Invoke-UserscriptRelease $root HEAD -RecordDirectory $script:records).version | Should Be '4.9.39'
-        Assert-MockCalled Invoke-UserscriptTool -Times 1 -Exactly -Scope It -ParameterFilter { $Name -eq 'gh' }
+        $script:createRelease | Should Be $true
+        (Read-DeploymentJson (Join-Path $script:records 'web-bookmarks--tampermonkey.json')).releaseTag | Should Be 'tampermonkey-v4.9.39'
+        Assert-MockCalled Invoke-UserscriptTool -Times 1 -Exactly -Scope It -ParameterFilter { $Name -eq 'gh' -and $Arguments[1] -eq 'create' }
     }
 
     It 'accepts identical content with CRLF without republishing' {
+        $script:releaseDetails.tagName = 'tampermonkey-v4.9.39'
+        $script:latestTag = $script:releaseDetails.tagName
+        $script:releaseList = @(@{ tagName = $script:releaseDetails.tagName; publishedAt = $script:releaseDetails.publishedAt })
         $script:remoteText = $script:bundleText.Replace("`n", "`r`n")
+        $script:latestText = $script:remoteText
         Invoke-UserscriptRelease $root HEAD -RecordDirectory $script:records | Out-Null
-        Assert-MockCalled Invoke-UserscriptTool -Times 0 -Exactly -Scope It -ParameterFilter { $Name -eq 'gh' }
+        $script:createRelease | Should Be $false
+    }
+
+    It 'refuses to record when the stable latest URL serves another asset' {
+        $script:releaseDetails.tagName = 'tampermonkey-v4.9.39'
+        $script:latestTag = $script:releaseDetails.tagName
+        $script:releaseList = @(@{ tagName = $script:releaseDetails.tagName; publishedAt = $script:releaseDetails.publishedAt })
+        $script:remoteText = $script:bundleText
+        $script:latestText = $script:bundleText + '// stale latest asset'
+        Assert-PublishThrows { Invoke-UserscriptRelease $root HEAD -VerifyOnly -RecordDirectory $script:records } '*Latest GitHub Release URL did not verify*'
+        Test-Path $script:records | Should Be $false
     }
 
     It 'rejects changed content without a higher version' {
-        $script:remoteText += '// different'
+        $script:releaseDetails.tagName = 'tampermonkey-v4.9.39'
+        $script:latestTag = $script:releaseDetails.tagName
+        $script:releaseList = @(@{ tagName = $script:releaseDetails.tagName; publishedAt = $script:releaseDetails.publishedAt })
+        $script:remoteText = $script:bundleText + '// different'
         Assert-PublishThrows { Invoke-UserscriptRelease $root HEAD -RecordDirectory $script:records } '*Increase @version*'
         Test-Path $script:records | Should Be $false
     }
 
-    It 'refuses a mismatch or stale revision in verify-only mode' {
-        $script:remoteText += '// different'
+    It 'refuses to record a mismatched release in verify-only mode' {
+        $script:releaseDetails.tagName = 'tampermonkey-v4.9.39'
+        $script:latestTag = $script:releaseDetails.tagName
+        $script:releaseList = @(@{ tagName = $script:releaseDetails.tagName; publishedAt = $script:releaseDetails.publishedAt })
+        $script:remoteText = $script:bundleText + '// different'
         Assert-PublishThrows { Invoke-UserscriptRelease $root HEAD -VerifyOnly -RecordDirectory $script:records } '*differs from the committed bundle*'
-        $script:remoteText = $script:bundleText
-        Assert-PublishThrows { Invoke-UserscriptRelease $root HEAD -VerifyOnly -GistRevision ('c' * 40) -RecordDirectory $script:records } '*no longer current*'
         Test-Path $script:records | Should Be $false
     }
 
-    It 'does not record a failed or unverified upload' {
-        $script:remoteText = $script:bundleText.Replace('4.9.39', '4.9.38')
-        Mock Invoke-UserscriptTool { throw 'Upload failed' } -ParameterFilter { $Name -eq 'gh' }
-        Assert-PublishThrows { Invoke-UserscriptRelease $root HEAD -RecordDirectory $script:records } '*Upload failed*'
+    It 'does not record a failed or unverified release' {
+        $script:failReleaseCreation = $true
+        Assert-PublishThrows { Invoke-UserscriptRelease $root HEAD -RecordDirectory $script:records } '*Release creation failed*'
         Test-Path $script:records | Should Be $false
-        Mock Invoke-UserscriptTool {} -ParameterFilter { $Name -eq 'gh' }
-        Assert-PublishThrows { Invoke-UserscriptRelease $root HEAD -RecordDirectory $script:records } '*upload did not verify*'
+        $script:failReleaseCreation = $false
+        $script:skipReleaseUpdate = $true
+        $script:releaseDetails.tagName = 'tampermonkey-v4.9.39'
+        $script:latestTag = $script:releaseDetails.tagName
+        $script:releaseList = @()
+        $script:remoteText = $script:bundleText.Replace('4.9.39', '4.9.38')
+        Assert-PublishThrows { Invoke-UserscriptRelease $root HEAD -RecordDirectory $script:records } '*asset did not verify*'
         Test-Path $script:records | Should Be $false
     }
 
@@ -95,10 +142,10 @@ Describe 'Userscript publication and release records' {
         Assert-PublishThrows { Invoke-UserscriptRelease $root HEAD -RecordDirectory $script:records } '*Record denied*'
     }
 
-    It 'rejects mismatched committed metadata before contacting the Gist' {
+    It 'rejects mismatched committed metadata before contacting GitHub Releases' {
         $script:headerText = $script:headerText.Replace('4.9.39', '4.9.40')
         Assert-PublishThrows { Invoke-UserscriptRelease $root HEAD -RecordDirectory $script:records } '*Rebuild and commit first*'
-        Assert-MockCalled Get-UserscriptGist -Times 0 -Exactly -Scope It
+        Assert-MockCalled Get-UserscriptReleases -Times 0 -Exactly -Scope It
     }
 }
 

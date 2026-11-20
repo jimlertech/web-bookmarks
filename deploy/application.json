@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "web-bookmarks",
-  "repository": "https://github.com/purduepete/web-bookmarks.git",
+  "repository": "https://github.com/jimlertech/web-bookmarks.git",
   "database": {
     "engine": "postgresql",
     "name": "web_bookmarks",

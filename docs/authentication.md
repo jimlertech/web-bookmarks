@@ -25,7 +25,7 @@ The production URL is `https://web-bookmarks.jimlertech.com`. The Azure hosting 
 
 Sign in at `https://web-bookmarks.jimlertech.com` with an allowed Microsoft identity in the same browser profile as Tampermonkey. The script calls the public API and does not prompt for a key. If Access returns a login page or denies the session, the palette shows a sign-in button. Complete sign-in, then reopen the palette. Tailscale is not required. Managed browser policies that block extension requests or session cookies may prevent the script from authenticating.
 
-The userscript source is in `tampermonkey/src/`. After a source change, bump `@version` in `tampermonkey/src/header.txt`, run `npm run build` from `tampermonkey`, commit the regenerated `webbookmarks-palette.user.js`, then update Gist `7e7bb1d0855d688bf683069e786ac524` with that generated file. Tampermonkey downloads the new version on its next update check.
+The userscript source is in `tampermonkey/src/`. After a source change, bump `@version` in `tampermonkey/src/header.txt`, run `npm run build` from `tampermonkey`, commit and push the regenerated `webbookmarks-palette.user.js`, then run `.\tampermonkey\Publish.ps1 -Commit HEAD` to publish a verified GitHub Release. Existing installs move from the personal Gist through the one-time migration update; future updates come from JimlerTech Releases.
 
 ## Troubleshooting
 

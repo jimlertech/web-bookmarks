@@ -68,12 +68,12 @@ Run `Invoke-Pester .\Publish.Tests.ps1` for the publish-and-record checks.
 
 ## Distribution
 
-The userscript ships via a **GitHub Gist**, referenced by the `@updateURL` /
-`@downloadURL` in `header.txt`. It is **not** deployed by the GitHub Actions
-workflow (which runs CI checks only). Tampermonkey only auto-updates a
-client when `@version` **increases**.
+The userscript ships as a **GitHub Release asset** in the JimlerTech repository.
+The `@updateURL` / `@downloadURL` in `header.txt` point to the latest release.
+Tampermonkey only auto-updates a client when `@version` **increases**.
 
-Gist id: `7e7bb1d0855d688bf683069e786ac524`
+Releases use the `tampermonkey-v<version>` tag pattern. The Gist previously used
+for distribution is retained as a migration bridge for existing installs.
 
 ## Publish checklist (any userscript change)
 
@@ -89,18 +89,16 @@ Gist id: `7e7bb1d0855d688bf683069e786ac524`
    .\tampermonkey\Publish.ps1 -Commit HEAD
    ```
 
-The command requires PowerShell 7.5+, GitHub CLI Gist access, the sibling
+The command requires PowerShell 7.5+, GitHub CLI repository access, the sibling
 `solution-deploy` checkout and access to the release-record folder on
 `\\jimbrownhome1.local\c$`. It checks the committed bundle's metadata, requires
-a version increase for changed content, and verifies the uploaded raw file
-before recording the `tampermonkey` component in Solution Directory.
+a version increase for changed content, creates and verifies a tagged GitHub
+Release before recording the `tampermonkey` component in Solution Directory.
 The hosted app's `web` release record is unchanged.
 
 If publication succeeded but recording failed, rerun the same command. Identical
-content is verified and recorded without another upload. To record an existing
-release explicitly, use `-VerifyOnly -GistRevision <full-revision>` with its
-source `-Commit`. This requires the revision to still be current and uses its
-actual Gist publication time, not the time the record is written.
+content is verified and recorded without creating another release. Use
+`-VerifyOnly` with its source `-Commit` to record an existing release.
 
 Before publishing, test the rebuilt userscript in Tampermonkey on a page that
 loads slowly. Confirm the shortcut opens the palette while loading is still

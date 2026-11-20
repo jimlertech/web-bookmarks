@@ -105,7 +105,7 @@ npm run build   # regenerates tampermonkey/webbookmarks-palette.user.js
 ```
 
 > 📖 Build details, the file layout, and the publish checklist (bump version →
-> build → update the Gist) are in [`tampermonkey/README.md`](tampermonkey/README.md).
+> build → publish a GitHub Release) are in [`tampermonkey/README.md`](tampermonkey/README.md).
 
 ## Pre-commit Hooks
 
