@@ -1,6 +1,7 @@
 // Shared, host-agnostic command palette core. Consumed by the React client and
 // (via the userscript build) the Tampermonkey userscript. No React/DOM/host deps.
 export type { Bookmark, BookmarkGroup, PaletteEntry, MruEntry } from './types';
+export type { NumberSelection } from './numbers';
 export { wildcardMatch } from './match';
 export { resolveBookmarkUrl, sanitizeUrl } from './url';
 export { resolveShortcutTargets } from './shortcut';

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WebBookmarks Command Palette
 // @namespace    https://web-bookmarks.jimlertech.com
-// @version      4.9.43
+// @version      4.9.44
 // @description  Press Ctrl+Alt+/ on any page to open the WebBookmarks command palette
 // @match        *://*/*
 // @exclude      http://192.168.50.100:3002/*
@@ -60,7 +60,7 @@
 
   // ../src/WebBookmarks.Client/src/palette-core/numbers.ts
   function parseNumberSelection(input) {
-    const nums = /* @__PURE__ */ new Set();
+    const ranges = [];
     const parts = input.split(",").map((s) => s.trim());
     for (const part of parts) {
       if (!part) continue;
@@ -69,14 +69,15 @@
         const lo = parseInt(rangeMatch[1], 10);
         const hi = parseInt(rangeMatch[2], 10);
         if (isNaN(lo) || isNaN(hi)) return null;
-        for (let i = Math.min(lo, hi); i <= Math.max(lo, hi); i++) nums.add(i);
+        ranges.push([Math.min(lo, hi), Math.max(lo, hi)]);
       } else if (/^\d+$/.test(part)) {
-        nums.add(parseInt(part, 10));
+        const value = parseInt(part, 10);
+        ranges.push([value, value]);
       } else {
         return null;
       }
     }
-    return nums.size > 0 ? nums : null;
+    return ranges.length > 0 ? { has: (index) => ranges.some(([lo, hi]) => index >= lo && index <= hi) } : null;
   }
   function detectNumberSelection(query) {
     const match = query.match(/^(.*?)\s+([\d,\s-]+)$/);

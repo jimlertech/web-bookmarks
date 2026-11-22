@@ -15,6 +15,7 @@ const pages = [];
 const bookmark = {
     id: 1,
     name: 'Slow page bookmark',
+    shortcut: '',
     url: 'https://example.com',
     isVisible: true,
     bookmarkGroup: 'Test',
@@ -94,6 +95,16 @@ afterEach(() => {
 });
 
 describe('userscript startup during page loading', () => {
+    it('selects bookmarks from a huge numeric range without freezing', () => {
+        const p = page({ cached: true });
+        p.key();
+        const shadow = p.host().shadowRoot;
+        const input = shadow.querySelector('.wbp-input');
+        input.value = 'Slow 1-99999999999';
+        input.dispatchEvent(new p.window.Event('input', { bubbles: true }));
+        expect(shadow.querySelector('.wbp-item-selected')?.textContent).toContain('Slow page bookmark');
+    });
+
     it('keeps the initially focused palette container free of a browser outline', () => {
         expect(bundle).toMatch(/\.wbp-container:focus\s*\{\s*outline: none;/);
         const css = readFileSync(new URL('./App.css', import.meta.url), 'utf8');

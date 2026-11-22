@@ -1,9 +1,11 @@
 import type { PaletteEntry } from './types';
 
-// Parses a number-selection string like "1,3-5" into a set of 1-based indices.
+export type NumberSelection = { has: (index: number) => boolean };
+
+// Parses a number-selection string like "1,3-5" into 1-based indices.
 // Returns null if the whole string isn't a valid comma/range list.
-export function parseNumberSelection(input: string): Set<number> | null {
-    const nums = new Set<number>();
+export function parseNumberSelection(input: string): NumberSelection | null {
+    const ranges: [number, number][] = [];
     const parts = input.split(',').map((s) => s.trim());
     for (const part of parts) {
         if (!part) continue;
@@ -12,21 +14,24 @@ export function parseNumberSelection(input: string): Set<number> | null {
             const lo = parseInt(rangeMatch[1], 10);
             const hi = parseInt(rangeMatch[2], 10);
             if (isNaN(lo) || isNaN(hi)) return null;
-            for (let i = Math.min(lo, hi); i <= Math.max(lo, hi); i++) nums.add(i);
+            ranges.push([Math.min(lo, hi), Math.max(lo, hi)]);
         } else if (/^\d+$/.test(part)) {
-            nums.add(parseInt(part, 10));
+            const value = parseInt(part, 10);
+            ranges.push([value, value]);
         } else {
             return null;
         }
     }
-    return nums.size > 0 ? nums : null;
+    return ranges.length > 0
+        ? { has: (index) => ranges.some(([lo, hi]) => index >= lo && index <= hi) }
+        : null;
 }
 
 // Splits a raw query into its search text and any trailing number selection
-// (e.g. "docs 1,3" -> { searchPart: "docs", numberSelection: {1,3} }).
+// (e.g. "docs 1,3" selects bookmark numbers 1 and 3).
 export function detectNumberSelection(query: string): {
     searchPart: string;
-    numberSelection: Set<number> | null;
+    numberSelection: NumberSelection | null;
 } {
     const match = query.match(/^(.*?)\s+([\d,\s-]+)$/);
     if (match) {

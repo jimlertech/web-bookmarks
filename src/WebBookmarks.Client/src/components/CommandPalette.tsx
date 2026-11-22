@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback, memo, type ReactElem
 import type { WebBookmarksItem, BookmarkGroup } from '../types';
 import { openUrls, sanitizeUrl, resolveBookmarkUrl } from '../utils';
 import { focusModalInput } from '../lib/modalFocus';
-import type { PaletteEntry, MruEntry } from '../palette-core';
+import type { PaletteEntry, MruEntry, NumberSelection } from '../palette-core';
 import {
     detectNumberSelection,
     filterEntries,
@@ -382,7 +382,7 @@ export default function CommandPalette({
     );
 
     const openByNumbers = useCallback(
-        (nums: Set<number>, newTabArg = false) => {
+        (nums: NumberSelection, newTabArg = false) => {
             const newTab = isTouchDevice ? newTabMode : newTabArg;
             const toOpen: { name: string; url: string }[] = [];
             const ids: number[] = [];

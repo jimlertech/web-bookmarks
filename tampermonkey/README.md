@@ -16,6 +16,8 @@ Pressing the shortcut again cancels the pending open.
 Tampermonkey can't display the palette on browser-owned pages, before navigation
 creates a document, or while the page blocks the browser's main thread.
 
+Number selections use compact ranges, so large ranges do not freeze the page.
+
 ## Architecture — one source of truth
 
 The palette's **pure logic** (wildcard matching, number-selection parsing, URL

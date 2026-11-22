@@ -129,10 +129,33 @@ describe('resolveBookmarkUrl', () => {
 
 describe('parseNumberSelection', () => {
     it('parses singles, commas and ranges', () => {
-        expect([...(parseNumberSelection('1,3-5') ?? [])]).toEqual([1, 3, 4, 5]);
+        const selection = parseNumberSelection('1,3-5');
+        expect([1, 2, 3, 4, 5, 6].map((n) => selection?.has(n))).toEqual([
+            true,
+            false,
+            true,
+            true,
+            true,
+            false,
+        ]);
     });
     it('handles reversed ranges', () => {
-        expect([...(parseNumberSelection('5-3') ?? [])]).toEqual([3, 4, 5]);
+        const selection = parseNumberSelection('5-3');
+        expect([2, 3, 4, 5, 6].map((n) => selection?.has(n))).toEqual([
+            false,
+            true,
+            true,
+            true,
+            false,
+        ]);
+    });
+    it('handles huge ranges and values without expanding them', () => {
+        const selection = parseNumberSelection('1-99999999999,9007199254740992-9007199254740992');
+        expect(selection?.has(1)).toBe(true);
+        expect(selection?.has(99999999999)).toBe(true);
+        expect(selection?.has(100000000000)).toBe(false);
+        expect(selection?.has(9007199254740992)).toBe(true);
+        expect(parseNumberSelection('9'.repeat(400) + '-' + '9'.repeat(400))?.has(1)).toBe(false);
     });
     it('returns null on invalid input', () => {
         expect(parseNumberSelection('1,a')).toBeNull();
@@ -144,7 +167,7 @@ describe('detectNumberSelection', () => {
     it('splits trailing numbers from the search part', () => {
         const r = detectNumberSelection('docs 1,3');
         expect(r.searchPart).toBe('docs');
-        expect([...(r.numberSelection ?? [])]).toEqual([1, 3]);
+        expect([1, 2, 3].map((n) => r.numberSelection?.has(n))).toEqual([true, false, true]);
     });
     it('leaves plain queries untouched', () => {
         const r = detectNumberSelection('docs');

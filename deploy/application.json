@@ -40,9 +40,6 @@
   "routes": [
     {
       "hostname": "web-bookmarks.jimlertech.com"
-    },
-    {
-      "hostname": "webbookmarks.jimlertech.com"
     }
   ]
 }
