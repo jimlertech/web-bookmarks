@@ -238,6 +238,15 @@ textarea {
     }
 }
 
+@media (min-width: 700px) and (max-width: 768px) {
+    .input-group-sm::before {
+        content: none;
+    }
+    .input-group-sm .startup-mode-group {
+        flex: 0 0 auto;
+    }
+}
+
 .header-spacer {
     height: 25px;
 }
@@ -285,6 +294,10 @@ td.col1 {
     overflow: hidden;
     text-overflow: ellipsis;
     border-right: none !important;
+}
+
+.bookmark-name-wrap {
+    display: contents;
 }
 
 td.col1 a {
@@ -424,6 +437,14 @@ td.col3 {
     align-items: center;
     justify-content: flex-end;
     gap: 8px;
+    column-gap: 10px;
+}
+
+.bookmark-row-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
 }
 
 .shortcut-label {
@@ -963,6 +984,9 @@ td.col3 {
 /* ── Touch device overrides (iPad / mobile) ──────── */
 
 @media (hover: none) {
+    .shortcut-wrap {
+        column-gap: 14px;
+    }
     .drag-handle {
         font-size: 14px;
         padding: 0px 2px;
@@ -1033,14 +1057,77 @@ td.col3 {
     .startup-mode-option {
         font-size: 10px;
     }
+}
+
+@media (max-width: 768px) {
     td.col1 {
         width: auto;
     }
+    .bookmark-name-wrap {
+        display: flex;
+        align-items: flex-start;
+        min-width: 0;
+    }
+    .bookmark-name-wrap .btn-favorite,
+    .bookmark-name-wrap .drag-handle {
+        flex-shrink: 0;
+        height: 20px;
+    }
+    .bookmark-name-wrap a {
+        flex: 1 1 0;
+        min-width: 0;
+        line-height: 20px;
+        overflow-wrap: anywhere;
+    }
     td.col3 {
-        width: 60px;
+        width: 120px;
+        padding-left: 4px !important;
+        padding-right: 4px !important;
+    }
+    .shortcut-wrap {
+        gap: 2px;
+    }
+    .bookmark-row-actions {
+        gap: 2px;
     }
     .shortcut-label {
         font-size: 12px;
+        padding-left: 6px;
+        padding-right: 6px;
+    }
+    .shortcut-does-not-fit {
+        position: absolute;
+        visibility: hidden;
+    }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+    td.col3 {
+        width: 154px;
+    }
+    .shortcut-wrap {
+        column-gap: 4px;
+    }
+}
+
+@media (hover: none) and (min-width: 481px) and (max-width: 768px) {
+    .shortcut-wrap {
+        column-gap: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .shortcut-label {
+        display: none;
+    }
+}
+
+@media (hover: none) and (max-width: 480px) {
+    td.col1 a {
+        font-size: 13px;
+    }
+    td.col3 {
+        width: 100px;
     }
 }
 

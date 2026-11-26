@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useLayoutEffect, useRef } from 'react';
 import {
     DndContext,
     closestCenter,
@@ -45,6 +45,38 @@ function SortableRow({
     conflictIds: Set<number>;
     editMode: boolean;
 }) {
+    const shortcutWrapRef = useRef<HTMLDivElement>(null);
+    const shortcutLabelRef = useRef<HTMLSpanElement>(null);
+    const rowActionsRef = useRef<HTMLDivElement>(null);
+    const hasConflict = conflictIds.has(item.id);
+
+    useLayoutEffect(() => {
+        const wrap = shortcutWrapRef.current;
+        const label = shortcutLabelRef.current;
+        const actions = rowActionsRef.current;
+        if (!wrap || !label || !actions) return;
+
+        const mediumScreen = window.matchMedia('(min-width: 481px) and (max-width: 768px)');
+        const update = () => {
+            const gap = parseFloat(getComputedStyle(wrap).columnGap);
+            const fits =
+                label.getBoundingClientRect().width + actions.getBoundingClientRect().width + gap <=
+                wrap.getBoundingClientRect().width;
+            label.classList.toggle('shortcut-does-not-fit', mediumScreen.matches && !fits);
+        };
+        const observer = new ResizeObserver(update);
+        observer.observe(wrap);
+        observer.observe(label);
+        observer.observe(actions);
+        mediumScreen.addEventListener('change', update);
+        update();
+
+        return () => {
+            observer.disconnect();
+            mediumScreen.removeEventListener('change', update);
+        };
+    }, [item.shortcut, hasConflict]);
+
     const {
         attributes,
         listeners,
@@ -66,26 +98,48 @@ function SortableRow({
     return (
         <tr ref={setNodeRef} style={style} className={item.isVisible ? '' : 'row-hidden-bookmark'}>
             <td className="col1">
-                <button
-                    className={`btn-favorite${item.isFavorite ? ' btn-favorite-active' : ''}`}
-                    onClick={() => onToggleFavorite(item)}
-                    aria-label={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                    data-tip={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                >
-                    {item.isFavorite ? (
-                        <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                            stroke="currentColor"
-                            strokeWidth="1"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        >
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                        </svg>
-                    ) : (
+                <div className="bookmark-name-wrap">
+                    <button
+                        className={`btn-favorite${item.isFavorite ? ' btn-favorite-active' : ''}`}
+                        onClick={() => onToggleFavorite(item)}
+                        aria-label={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                        data-tip={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                    >
+                        {item.isFavorite ? (
+                            <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                stroke="currentColor"
+                                strokeWidth="1"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                            </svg>
+                        ) : (
+                            <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                            </svg>
+                        )}
+                    </button>
+                    <span
+                        className={`drag-handle${editMode ? '' : ' edit-hidden'}`}
+                        ref={setActivatorNodeRef}
+                        {...(editMode ? { ...attributes, ...listeners } : {})}
+                        aria-label="Drag to reorder"
+                        data-tip="Drag to reorder"
+                    >
                         <svg
                             width="14"
                             height="14"
@@ -94,42 +148,23 @@ function SortableRow({
                             stroke="currentColor"
                             strokeWidth="2"
                             strokeLinecap="round"
-                            strokeLinejoin="round"
                         >
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                            <line x1="3" y1="6" x2="21" y2="6" />
+                            <line x1="3" y1="12" x2="21" y2="12" />
+                            <line x1="3" y1="18" x2="21" y2="18" />
                         </svg>
-                    )}
-                </button>
-                <span
-                    className={`drag-handle${editMode ? '' : ' edit-hidden'}`}
-                    ref={setActivatorNodeRef}
-                    {...(editMode ? { ...attributes, ...listeners } : {})}
-                    aria-label="Drag to reorder"
-                    data-tip="Drag to reorder"
-                >
-                    <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                    >
-                        <line x1="3" y1="6" x2="21" y2="6" />
-                        <line x1="3" y1="12" x2="21" y2="12" />
-                        <line x1="3" y1="18" x2="21" y2="18" />
-                    </svg>
-                </span>
-                <a href={sanitizeUrl(item.url)}>{item.name}</a>
+                    </span>
+                    <a href={sanitizeUrl(item.url)}>{item.name}</a>
+                </div>
             </td>
             <td className="col3">
-                <div className="shortcut-wrap">
+                <div className="shortcut-wrap" ref={shortcutWrapRef}>
                     {item.shortcut && (
                         <span
-                            className={`shortcut-label${conflictIds.has(item.id) ? ' shortcut-conflict' : ''}`}
+                            ref={shortcutLabelRef}
+                            className={`shortcut-label${hasConflict ? ' shortcut-conflict' : ''}`}
                         >
-                            {conflictIds.has(item.id) && (
+                            {hasConflict && (
                                 <span
                                     className="conflict-icon"
                                     role="img"
@@ -156,79 +191,81 @@ function SortableRow({
                             {item.shortcut}
                         </span>
                     )}
-                    <button
-                        className="btn-visibility-bookmark"
-                        onClick={() => onToggleVisibility(item)}
-                        disabled={visibilityPending.has(item.id)}
-                        aria-label={item.isVisible ? 'Hide bookmark' : 'Show bookmark'}
-                        data-tip={item.isVisible ? 'Hide bookmark' : 'Show bookmark'}
-                    >
-                        <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            aria-hidden="true"
+                    <div className="bookmark-row-actions" ref={rowActionsRef}>
+                        <button
+                            className="btn-visibility-bookmark"
+                            onClick={() => onToggleVisibility(item)}
+                            disabled={visibilityPending.has(item.id)}
+                            aria-label={item.isVisible ? 'Hide bookmark' : 'Show bookmark'}
+                            data-tip={item.isVisible ? 'Hide bookmark' : 'Show bookmark'}
                         >
-                            {item.isVisible ? (
-                                <>
-                                    <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z" />
-                                    <circle cx="12" cy="12" r="3" />
-                                </>
-                            ) : (
-                                <>
-                                    <path d="M3 3l18 18M10.6 6.1A11 11 0 0112 6c6.5 0 10 6 10 6a14 14 0 01-3.1 3.5M6.3 6.8A14 14 0 002 12s3.5 6 10 6a10 10 0 004.2-.9" />
-                                    <path d="M9.9 9.9a3 3 0 004.2 4.2" />
-                                </>
-                            )}
-                        </svg>
-                    </button>
-                    <button
-                        className={`btn-edit-bookmark${editMode ? '' : ' edit-hidden'}`}
-                        onClick={() => onEdit(item)}
-                        aria-label="Edit bookmark"
-                        data-tip="Edit bookmark"
-                    >
-                        <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                            <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                aria-hidden="true"
+                            >
+                                {item.isVisible ? (
+                                    <>
+                                        <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z" />
+                                        <circle cx="12" cy="12" r="3" />
+                                    </>
+                                ) : (
+                                    <>
+                                        <path d="M3 3l18 18M10.6 6.1A11 11 0 0112 6c6.5 0 10 6 10 6a14 14 0 01-3.1 3.5M6.3 6.8A14 14 0 002 12s3.5 6 10 6a10 10 0 004.2-.9" />
+                                        <path d="M9.9 9.9a3 3 0 004.2 4.2" />
+                                    </>
+                                )}
+                            </svg>
+                        </button>
+                        <button
+                            className={`btn-edit-bookmark${editMode ? '' : ' edit-hidden'}`}
+                            onClick={() => onEdit(item)}
+                            aria-label="Edit bookmark"
+                            data-tip="Edit bookmark"
                         >
-                            <path
-                                transform="translate(-3 3)"
-                                d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"
-                            />
-                        </svg>
-                    </button>
-                    <button
-                        className={`btn-delete-bookmark${editMode ? '' : ' edit-hidden'}`}
-                        onClick={() => onDelete(item)}
-                        aria-label="Delete bookmark"
-                        data-tip="Delete bookmark"
-                    >
-                        <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                            <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <path
+                                    transform="translate(-3 3)"
+                                    d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"
+                                />
+                            </svg>
+                        </button>
+                        <button
+                            className={`btn-delete-bookmark${editMode ? '' : ' edit-hidden'}`}
+                            onClick={() => onDelete(item)}
+                            aria-label="Delete bookmark"
+                            data-tip="Delete bookmark"
                         >
-                            <line x1="18" y1="6" x2="6" y2="18" />
-                            <line x1="6" y1="6" x2="18" y2="18" />
-                        </svg>
-                    </button>
+                            <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </td>
         </tr>
