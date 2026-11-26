@@ -85,6 +85,7 @@ beforeEach(() => {
                 visibilityPending={new Set()}
                 conflictIds={new Set()}
                 editMode
+                showVisibilityButtons
             />,
         ),
     );

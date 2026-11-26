@@ -17,6 +17,8 @@ interface Props {
     onShowHiddenChange: (value: boolean) => void;
     editMode: boolean;
     onEditModeChange: (value: boolean) => void;
+    showVisibilityButtons: boolean;
+    onShowVisibilityButtonsChange: (value: boolean) => void;
     onImport: () => void;
     onBulkEdit: () => void;
     profiles: string[];
@@ -44,6 +46,8 @@ export default function Toolbar({
     onShowHiddenChange,
     editMode,
     onEditModeChange,
+    showVisibilityButtons,
+    onShowVisibilityButtonsChange,
     onImport,
     onBulkEdit,
     profiles,
@@ -127,6 +131,15 @@ export default function Toolbar({
                                 onChange={(e) => onEditModeChange(e.target.checked)}
                             />
                             Edit
+                        </label>
+                        <label className="dropdown-options-item">
+                            <input
+                                type="checkbox"
+                                className="form-check-input mt-0 me-1"
+                                checked={showVisibilityButtons}
+                                onChange={(e) => onShowVisibilityButtonsChange(e.target.checked)}
+                            />
+                            Visibility
                         </label>
                         <div className="dropdown-options-divider" />
                         <div className="dropdown-options-heading">Actions</div>

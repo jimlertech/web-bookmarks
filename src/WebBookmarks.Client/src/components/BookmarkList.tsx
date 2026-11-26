@@ -11,6 +11,7 @@ interface Props {
     visibilityPending: Set<number>;
     conflictIds: Set<number>;
     editMode: boolean;
+    showVisibilityButtons: boolean;
 }
 
 // Renders the displayed bookmark groups. Each group is its own dnd-kit sortable table.
@@ -24,6 +25,7 @@ export default function BookmarkList({
     visibilityPending,
     conflictIds,
     editMode,
+    showVisibilityButtons,
 }: Props) {
     return (
         <>
@@ -39,6 +41,7 @@ export default function BookmarkList({
                     visibilityPending={visibilityPending}
                     conflictIds={conflictIds}
                     editMode={editMode}
+                    showVisibilityButtons={showVisibilityButtons}
                 />
             ))}
         </>

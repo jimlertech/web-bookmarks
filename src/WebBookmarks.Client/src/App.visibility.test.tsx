@@ -73,6 +73,30 @@ function button(label: string): HTMLButtonElement {
     return element;
 }
 
+it('shows and hides visibility controls independently of Edit and Hidden', async () => {
+    await act(async () => button('Options').click());
+    const checkbox = (text: string) => {
+        const input = [...host.querySelectorAll('label')]
+            .find((label) => label.textContent?.trim() === text)
+            ?.querySelector('input');
+        if (!input) throw new Error(`Missing ${text} option`);
+        return input;
+    };
+
+    expect(checkbox('Visibility').checked).toBe(true);
+    await act(async () => checkbox('Visibility').click());
+    expect(button('Hide bookmark').classList.contains('edit-hidden')).toBe(true);
+    expect(button('Edit bookmark').classList.contains('edit-hidden')).toBe(false);
+    expect(checkbox('Hidden').checked).toBe(true);
+
+    await act(async () => checkbox('Edit').click());
+    await act(async () => checkbox('Visibility').click());
+    expect(button('Hide bookmark').classList.contains('edit-hidden')).toBe(false);
+    expect(button('Edit bookmark').classList.contains('edit-hidden')).toBe(true);
+    expect(checkbox('Hidden').checked).toBe(true);
+    expect(requests).toEqual([]);
+});
+
 it('toggles visibility and persists only the visibility field', async () => {
     await act(async () => button('Hide bookmark').click());
     expect(requests).toEqual([expect.objectContaining({ ids: [1], isVisible: false })]);

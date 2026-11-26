@@ -24,6 +24,7 @@ interface Props {
     visibilityPending: Set<number>;
     conflictIds: Set<number>;
     editMode: boolean;
+    showVisibilityButtons: boolean;
 }
 
 function SortableRow({
@@ -35,6 +36,7 @@ function SortableRow({
     visibilityPending,
     conflictIds,
     editMode,
+    showVisibilityButtons,
 }: {
     item: WebBookmarksItem;
     onEdit: (item: WebBookmarksItem) => void;
@@ -44,6 +46,7 @@ function SortableRow({
     visibilityPending: Set<number>;
     conflictIds: Set<number>;
     editMode: boolean;
+    showVisibilityButtons: boolean;
 }) {
     const shortcutWrapRef = useRef<HTMLDivElement>(null);
     const shortcutLabelRef = useRef<HTMLSpanElement>(null);
@@ -193,7 +196,7 @@ function SortableRow({
                     )}
                     <div className="bookmark-row-actions" ref={rowActionsRef}>
                         <button
-                            className="btn-visibility-bookmark"
+                            className={`btn-visibility-bookmark${showVisibilityButtons ? '' : ' edit-hidden'}`}
                             onClick={() => onToggleVisibility(item)}
                             disabled={visibilityPending.has(item.id)}
                             aria-label={item.isVisible ? 'Hide bookmark' : 'Show bookmark'}
@@ -282,6 +285,7 @@ export default function BookmarkGroup({
     visibilityPending,
     conflictIds,
     editMode,
+    showVisibilityButtons,
 }: Props) {
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -327,6 +331,7 @@ export default function BookmarkGroup({
                                     visibilityPending={visibilityPending}
                                     conflictIds={conflictIds}
                                     editMode={editMode}
+                                    showVisibilityButtons={showVisibilityButtons}
                                 />
                             ))}
                         </tbody>

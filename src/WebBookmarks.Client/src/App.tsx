@@ -46,6 +46,7 @@ export default function App() {
     })();
     const bookmarkInputRef = useRef<HTMLInputElement>(null);
     const [editMode, setEditMode] = useState(true);
+    const [showVisibilityButtons, setShowVisibilityButtons] = useState(true);
     const [optionsOpen, setOptionsOpen] = useState(false);
     const [visibilityPending, setVisibilityPending] = useState<Set<number>>(() => new Set());
     const visibilityPendingRef = useRef(new Set<number>());
@@ -310,6 +311,8 @@ export default function App() {
                     onShowHiddenChange={setShowHidden}
                     editMode={editMode}
                     onEditModeChange={setEditMode}
+                    showVisibilityButtons={showVisibilityButtons}
+                    onShowVisibilityButtonsChange={setShowVisibilityButtons}
                     onImport={openImport}
                     onBulkEdit={openBulkEdit}
                     profiles={profiles}
@@ -330,6 +333,7 @@ export default function App() {
                     visibilityPending={visibilityPending}
                     conflictIds={conflictIds}
                     editMode={editMode}
+                    showVisibilityButtons={showVisibilityButtons}
                 />
             </div>
 
