@@ -7,6 +7,8 @@ interface Props {
     onDelete: (item: WebBookmarksItem) => void;
     onReorder: (groupName: string, activeId: number, overId: number) => void;
     onToggleFavorite: (item: WebBookmarksItem) => void;
+    onToggleVisibility: (item: WebBookmarksItem) => void;
+    visibilityPending: Set<number>;
     conflictIds: Set<number>;
     editMode: boolean;
 }
@@ -18,6 +20,8 @@ export default function BookmarkList({
     onDelete,
     onReorder,
     onToggleFavorite,
+    onToggleVisibility,
+    visibilityPending,
     conflictIds,
     editMode,
 }: Props) {
@@ -31,6 +35,8 @@ export default function BookmarkList({
                     onDelete={onDelete}
                     onReorder={onReorder}
                     onToggleFavorite={onToggleFavorite}
+                    onToggleVisibility={onToggleVisibility}
+                    visibilityPending={visibilityPending}
                     conflictIds={conflictIds}
                     editMode={editMode}
                 />

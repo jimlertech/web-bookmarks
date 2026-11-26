@@ -552,7 +552,11 @@ td.col3 {
 
 /* ── Hidden Bookmarks ────────────────────────────── */
 
-.row-hidden-bookmark {
+.row-hidden-bookmark .col1,
+.row-hidden-bookmark .shortcut-label,
+.row-hidden-bookmark .btn-visibility-bookmark,
+.row-hidden-bookmark .btn-edit-bookmark,
+.row-hidden-bookmark .btn-delete-bookmark {
     opacity: 0.4;
 }
 
@@ -564,17 +568,39 @@ td.col3 {
     color: var(--dim);
 }
 
-/* ── Edit Bookmark Button ────────────────────────── */
+/* ── Bookmark Row Actions ────────────────────────── */
+
+.btn-visibility-bookmark,
+.btn-edit-bookmark,
+.btn-delete-bookmark {
+    padding: 2px;
+}
+
+.btn-visibility-bookmark {
+    background: none;
+    border: 0;
+    color: var(--dim);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-visibility-bookmark:hover {
+    color: var(--accent);
+}
+
+.btn-visibility-bookmark:disabled {
+    cursor: wait;
+}
 
 .btn-edit-bookmark {
     visibility: hidden;
-    margin-left: auto;
     background: none;
-    border: 1px solid var(--line);
+    border: 0;
     color: var(--dim);
     cursor: pointer;
     font-size: 13px;
-    padding: 0 5px;
     border-radius: var(--radius);
     line-height: 1.4;
     display: inline-flex;
@@ -588,20 +614,17 @@ td.col3 {
 
 .btn-edit-bookmark:hover {
     color: var(--accent);
-    border-color: var(--accent);
 }
 
 /* ── Delete Bookmark Button ──────────────────────── */
 
 .btn-delete-bookmark {
     visibility: hidden;
-    margin-left: 2px;
     background: none;
-    border: 1px solid var(--line);
+    border: 0;
     color: var(--dim);
     cursor: pointer;
     font-size: 11px;
-    padding: 0 5px;
     border-radius: var(--radius);
     line-height: 1.4;
     display: inline-flex;
@@ -615,7 +638,6 @@ td.col3 {
 
 .btn-delete-bookmark:hover {
     color: var(--danger);
-    border-color: var(--danger);
 }
 
 /* ── Favorite Star ───────────────────────────────── */
@@ -952,6 +974,7 @@ td.col3 {
         border: none;
         border-radius: var(--radius);
     }
+    .btn-visibility-bookmark,
     .btn-edit-bookmark,
     .btn-delete-bookmark {
         font-size: 14px;

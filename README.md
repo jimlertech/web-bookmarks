@@ -29,6 +29,7 @@ A personal bookmark manager with a .NET 9 API, React frontend, and PostgreSQL da
 - **Create / Edit bookmarks** — modal form with group dropdown (existing or new)
 - **Alias conflict detection** — warns on partial matches (e.g. `_stwp` vs `_stwpl`) both in the modal and inline with ⚠ icons
 - **Show / Hide hidden bookmarks** — toggle to reveal hidden bookmarks (dimmed at 40% opacity)
+- **Bookmark visibility** — use the eye icon on a bookmark row to show or hide it without opening the editor
 - **Prompt mode** — optional browser prompt for quick shortcut-based navigation
 - **Access gate** — Microsoft-only Cloudflare Access protects the public site; Tailscale protects the private app endpoint
 

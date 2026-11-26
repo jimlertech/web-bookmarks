@@ -20,6 +20,8 @@ interface Props {
     onDelete: (item: WebBookmarksItem) => void;
     onReorder: (groupName: string, activeId: number, overId: number) => void;
     onToggleFavorite: (item: WebBookmarksItem) => void;
+    onToggleVisibility: (item: WebBookmarksItem) => void;
+    visibilityPending: Set<number>;
     conflictIds: Set<number>;
     editMode: boolean;
 }
@@ -29,6 +31,8 @@ function SortableRow({
     onEdit,
     onDelete,
     onToggleFavorite,
+    onToggleVisibility,
+    visibilityPending,
     conflictIds,
     editMode,
 }: {
@@ -36,6 +40,8 @@ function SortableRow({
     onEdit: (item: WebBookmarksItem) => void;
     onDelete: (item: WebBookmarksItem) => void;
     onToggleFavorite: (item: WebBookmarksItem) => void;
+    onToggleVisibility: (item: WebBookmarksItem) => void;
+    visibilityPending: Set<number>;
     conflictIds: Set<number>;
     editMode: boolean;
 }) {
@@ -151,14 +157,45 @@ function SortableRow({
                         </span>
                     )}
                     <button
+                        className="btn-visibility-bookmark"
+                        onClick={() => onToggleVisibility(item)}
+                        disabled={visibilityPending.has(item.id)}
+                        aria-label={item.isVisible ? 'Hide bookmark' : 'Show bookmark'}
+                        data-tip={item.isVisible ? 'Hide bookmark' : 'Show bookmark'}
+                    >
+                        <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                        >
+                            {item.isVisible ? (
+                                <>
+                                    <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </>
+                            ) : (
+                                <>
+                                    <path d="M3 3l18 18M10.6 6.1A11 11 0 0112 6c6.5 0 10 6 10 6a14 14 0 01-3.1 3.5M6.3 6.8A14 14 0 002 12s3.5 6 10 6a10 10 0 004.2-.9" />
+                                    <path d="M9.9 9.9a3 3 0 004.2 4.2" />
+                                </>
+                            )}
+                        </svg>
+                    </button>
+                    <button
                         className={`btn-edit-bookmark${editMode ? '' : ' edit-hidden'}`}
                         onClick={() => onEdit(item)}
                         aria-label="Edit bookmark"
                         data-tip="Edit bookmark"
                     >
                         <svg
-                            width="13"
-                            height="13"
+                            width="16"
+                            height="16"
                             viewBox="0 0 24 24"
                             fill="none"
                             stroke="currentColor"
@@ -166,8 +203,10 @@ function SortableRow({
                             strokeLinecap="round"
                             strokeLinejoin="round"
                         >
-                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            <path
+                                transform="translate(-3 3)"
+                                d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"
+                            />
                         </svg>
                     </button>
                     <button
@@ -177,8 +216,8 @@ function SortableRow({
                         data-tip="Delete bookmark"
                     >
                         <svg
-                            width="13"
-                            height="13"
+                            width="16"
+                            height="16"
                             viewBox="0 0 24 24"
                             fill="none"
                             stroke="currentColor"
@@ -202,6 +241,8 @@ export default function BookmarkGroup({
     onDelete,
     onReorder,
     onToggleFavorite,
+    onToggleVisibility,
+    visibilityPending,
     conflictIds,
     editMode,
 }: Props) {
@@ -245,6 +286,8 @@ export default function BookmarkGroup({
                                     onEdit={onEdit}
                                     onDelete={onDelete}
                                     onToggleFavorite={onToggleFavorite}
+                                    onToggleVisibility={onToggleVisibility}
+                                    visibilityPending={visibilityPending}
                                     conflictIds={conflictIds}
                                     editMode={editMode}
                                 />

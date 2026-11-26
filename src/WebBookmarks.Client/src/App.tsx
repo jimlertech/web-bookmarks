@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { reorderBookmarks, toggleFavorite } from './api';
+import { bulkUpdateBookmarks, reorderBookmarks, toggleFavorite } from './api';
 import type { WebBookmarksItem } from './types';
 import { openUrls } from './utils';
 import { useBookmarks } from './hooks/useBookmarks';
@@ -47,6 +47,10 @@ export default function App() {
     const bookmarkInputRef = useRef<HTMLInputElement>(null);
     const [editMode, setEditMode] = useState(true);
     const [optionsOpen, setOptionsOpen] = useState(false);
+    const [visibilityPending, setVisibilityPending] = useState<Set<number>>(() => new Set());
+    const visibilityPendingRef = useRef(new Set<number>());
+    const currentViewRef = useRef({ showHidden, loadBookmarks });
+    currentViewRef.current = { showHidden, loadBookmarks };
     const optionsRef = useRef<HTMLDivElement>(null);
     const [paletteOpen, setPaletteOpen] = useState(false);
     const [startupPaletteHiding, setStartupPaletteHiding] = useState(() => {
@@ -204,6 +208,41 @@ export default function App() {
         [loadBookmarks, setBookmarks, setError],
     );
 
+    const handleToggleVisibility = useCallback(
+        async (item: WebBookmarksItem) => {
+            if (visibilityPendingRef.current.has(item.id)) return;
+            visibilityPendingRef.current.add(item.id);
+            setVisibilityPending(new Set(visibilityPendingRef.current));
+            const isVisible = !item.isVisible;
+            try {
+                const result = await bulkUpdateBookmarks(
+                    [item.id],
+                    undefined,
+                    undefined,
+                    undefined,
+                    isVisible,
+                );
+                if (result.updated !== 1) throw new Error('Bookmark could not be found.');
+                setBookmarks((prev) =>
+                    prev.flatMap((bookmark) =>
+                        bookmark.id !== item.id
+                            ? [bookmark]
+                            : isVisible || currentViewRef.current.showHidden
+                              ? [{ ...bookmark, isVisible }]
+                              : [],
+                    ),
+                );
+                currentViewRef.current.loadBookmarks(true);
+            } catch (e) {
+                setError(e instanceof Error ? e.message : 'Toggle visibility failed');
+            } finally {
+                visibilityPendingRef.current.delete(item.id);
+                setVisibilityPending(new Set(visibilityPendingRef.current));
+            }
+        },
+        [setBookmarks, setError],
+    );
+
     // Only show a full-page error when there's nothing cached to fall back on.
     // If we have bookmarks (from cache), keep showing them and surface the
     // failure as a non-blocking banner below instead of wiping the UI.
@@ -287,6 +326,8 @@ export default function App() {
                     onDelete={handleDelete}
                     onReorder={handleReorder}
                     onToggleFavorite={handleToggleFavorite}
+                    onToggleVisibility={handleToggleVisibility}
+                    visibilityPending={visibilityPending}
                     conflictIds={conflictIds}
                     editMode={editMode}
                 />

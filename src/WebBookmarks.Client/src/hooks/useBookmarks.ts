@@ -52,37 +52,42 @@ export function useBookmarks() {
     // longer overwrite the UI once the dependencies have changed (stale-fetch race).
     const requestIdRef = useRef(0);
 
-    const loadBookmarks = useCallback(() => {
-        const requestId = ++requestIdRef.current;
-        setError(null);
-        // Immediately show locally cached bookmarks for this profile. If this
-        // profile has no cache (e.g. first switch to it), clear the previous
-        // profile's list and show loading so stale bookmarks aren't left on screen.
-        const local = getLocalBookmarks(activeProfile);
-        if (local) {
-            setBookmarks(local);
-        } else {
-            setBookmarks([]);
-            setLoading(true);
-        }
-        // Fetch fresh data in background
-        fetchBookmarks(showHidden, activeProfile)
-            .then((data) => {
-                // Always cache under the profile this request was for (correct key),
-                // but only drive the UI if this is still the latest request.
-                setLocalBookmarks(activeProfile, data);
-                if (requestId !== requestIdRef.current) return;
-                setBookmarks(data);
-            })
-            .catch((e) => {
-                if (requestId !== requestIdRef.current) return;
-                setError(e.message);
-            })
-            .finally(() => {
-                if (requestId !== requestIdRef.current) return;
-                setLoading(false);
-            });
-    }, [showHidden, activeProfile]);
+    const loadBookmarks = useCallback(
+        (preserveCurrent = false) => {
+            const requestId = ++requestIdRef.current;
+            setError(null);
+            // Immediately show locally cached bookmarks for this profile. If this
+            // profile has no cache (e.g. first switch to it), clear the previous
+            // profile's list and show loading so stale bookmarks aren't left on screen.
+            if (!preserveCurrent) {
+                const local = getLocalBookmarks(activeProfile);
+                if (local) {
+                    setBookmarks(local);
+                } else {
+                    setBookmarks([]);
+                    setLoading(true);
+                }
+            }
+            // Fetch fresh data in background
+            fetchBookmarks(showHidden, activeProfile)
+                .then((data) => {
+                    // Always cache under the profile this request was for (correct key),
+                    // but only drive the UI if this is still the latest request.
+                    setLocalBookmarks(activeProfile, data);
+                    if (requestId !== requestIdRef.current) return;
+                    setBookmarks(data);
+                })
+                .catch((e) => {
+                    if (requestId !== requestIdRef.current) return;
+                    setError(e.message);
+                })
+                .finally(() => {
+                    if (requestId !== requestIdRef.current) return;
+                    setLoading(false);
+                });
+        },
+        [showHidden, activeProfile],
+    );
 
     // Profiles change rarely (only when a mutation/import introduces or removes
     // one), so they're fetched separately from bookmarks: once on mount and
