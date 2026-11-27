@@ -477,16 +477,16 @@ import {
         if (items.length === 0) return;
         if (newTab) {
             for (const item of items) {
-                GM_openInTab(sanitizeUrl(item.url), { active: true, insert: true });
+                GM_openInTab(sanitizeUrl(item.url), { active: true, insert: items.length === 1 });
             }
         } else {
-            // Use Tampermonkey's GM_openInTab — it has elevated privileges and
-            // is not subject to the browser's popup blocker.
-            for (let i = 0; i < items.length - 1; i++) {
-                GM_openInTab(sanitizeUrl(items[i].url), { active: false, insert: true });
+            const firstUrl = sanitizeUrl(items[0].url);
+            const firstIsFile = /^\s*file:/i.test(firstUrl);
+            if (firstIsFile) navigateTo(firstUrl);
+            for (let i = 1; i < items.length; i++) {
+                GM_openInTab(sanitizeUrl(items[i].url), { active: false, insert: false });
             }
-            // Navigate current tab to the last URL
-            navigateTo(items[items.length - 1].url);
+            if (!firstIsFile) navigateTo(firstUrl);
         }
     }
 

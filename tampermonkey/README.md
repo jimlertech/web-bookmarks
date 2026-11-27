@@ -18,6 +18,9 @@ creates a document, or while the page blocks the browser's main thread.
 
 Number selections use compact ranges, so large ranges do not freeze the page.
 
+When opening multiple bookmarks, their tabs follow the bookmark list order. In
+current-tab mode, the first bookmark uses the current tab when possible.
+
 ## Architecture — one source of truth
 
 The palette's **pure logic** (wildcard matching, number-selection parsing, URL

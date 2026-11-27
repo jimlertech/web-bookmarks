@@ -42,13 +42,11 @@ describe('sanitizeUrl', () => {
     });
 });
 
-// Fix (audit R4 / #40): multi-open must open the non-final URLs synchronously
-// inside the click gesture so popup blockers don't drop the extra tabs. The last
-// URL navigates the current tab.
+// Multi-open requests extra URLs synchronously inside the click gesture.
 describe('openUrls (multi-open, same tab)', () => {
     afterEach(() => vi.restoreAllMocks());
 
-    it('opens all-but-last synchronously and navigates to the last', () => {
+    it('opens the remaining URLs synchronously and navigates to the first', () => {
         const open = vi.spyOn(window, 'open').mockReturnValue(null);
         const setHref = vi.fn();
         Object.defineProperty(window, 'location', {
@@ -73,9 +71,30 @@ describe('openUrls (multi-open, same tab)', () => {
         );
 
         expect(open).toHaveBeenCalledTimes(2);
-        expect(open).toHaveBeenNthCalledWith(1, 'https://a.example', '_blank', 'noopener');
-        expect(open).toHaveBeenNthCalledWith(2, 'https://b.example', '_blank', 'noopener');
-        expect(setHref).toHaveBeenCalledWith('https://c.example');
+        expect(open).toHaveBeenNthCalledWith(1, 'https://b.example', '_blank', 'noopener');
+        expect(open).toHaveBeenNthCalledWith(2, 'https://c.example', '_blank', 'noopener');
+        expect(setHref).toHaveBeenCalledWith('https://a.example');
+    });
+});
+
+describe('openUrls (new tabs)', () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    it('opens bookmarks in list order', () => {
+        const open = vi.spyOn(window, 'open').mockReturnValue(null);
+        openUrls(
+            [
+                { name: 'a', url: 'https://a.example' },
+                { name: 'b', url: 'https://b.example' },
+                { name: 'c', url: 'https://c.example' },
+            ],
+            true,
+        );
+        expect(open.mock.calls.map(([url]) => url)).toEqual([
+            'https://a.example',
+            'https://b.example',
+            'https://c.example',
+        ]);
     });
 });
 

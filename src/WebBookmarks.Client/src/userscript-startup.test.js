@@ -26,6 +26,7 @@ function page({
     root = true,
     body = false,
     cached = false,
+    cachedBookmarks = [bookmark],
     ua = 'Windows',
     platform = 'Win32',
     touches = 0,
@@ -48,7 +49,7 @@ function page({
     const requests = [];
     const observers = [];
     const menus = [];
-    const values = new Map(cached ? [['bookmarks_home', [bookmark]]] : []);
+    const values = new Map(cached ? [['bookmarks_home', cachedBookmarks]] : []);
     const NativeObserver = window.MutationObserver;
     window.MutationObserver = class extends NativeObserver {
         constructor(callback) {
@@ -95,6 +96,41 @@ afterEach(() => {
 });
 
 describe('userscript startup during page loading', () => {
+    it('opens a group in new tabs in bookmark order', () => {
+        const bookmarks = ['a', 'b', 'c'].map((name, index) => ({
+            ...bookmark,
+            id: index + 1,
+            name,
+            url: `https://${name}.example`,
+        }));
+        const p = page({ cached: true, cachedBookmarks: bookmarks });
+        p.key();
+        const group = [...p.host().shadowRoot.querySelectorAll('.wbp-item')].find(
+            (row) => row.querySelector('.wbp-item-label').textContent === 'Test',
+        );
+        group.dispatchEvent(new p.window.MouseEvent('click', { bubbles: true, ctrlKey: true }));
+        expect(p.window.GM_openInTab.mock.calls).toEqual(
+            bookmarks.map((item) => [item.url, { active: true, insert: false }]),
+        );
+    });
+
+    it('opens a file first when the current tab cannot navigate to it', () => {
+        const bookmarks = [
+            { ...bookmark, name: 'a', url: 'file:///a' },
+            { ...bookmark, id: 2, name: 'b', url: 'https://b.example' },
+        ];
+        const p = page({ cached: true, cachedBookmarks: bookmarks });
+        p.key();
+        const group = [...p.host().shadowRoot.querySelectorAll('.wbp-item')].find(
+            (row) => row.querySelector('.wbp-item-label').textContent === 'Test',
+        );
+        group.click();
+        expect(p.window.GM_openInTab.mock.calls).toEqual([
+            ['file:///a', { active: true, insert: true }],
+            ['https://b.example', { active: false, insert: false }],
+        ]);
+    });
+
     it('selects bookmarks from a huge numeric range without freezing', () => {
         const p = page({ cached: true });
         p.key();
